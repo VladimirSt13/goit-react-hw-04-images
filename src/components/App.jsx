@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchPics } from '../services/api';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -6,71 +6,68 @@ import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 
-export class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    images: [],
-    loadMore: false,
-    loader: false,
-    showModal: false,
-    bigImage: '',
-    alt: '',
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [loadMore, setLoadMore] = useState(false);
+  const [loader, setLoader] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [bigImage, setBigImage] = useState('');
+  const [alt, setAlt] = useState('');
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { query: prevQuery, page: prevPage } = prevState;
-    const { query, page } = this.state;
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
 
-    if (prevQuery !== query || prevPage < page) {
-      this.setState({ loader: true });
+    setLoader(true);
 
+    const getData = async () => {
       try {
         const { data } = await fetchPics(query, page);
         const { hits, totalHits } = data;
-
-        this.setState(state => ({
-          images: [...state.images, ...hits],
-          loadMore: totalHits > 12 * page,
-          loader: false,
-        }));
+        setImages(state => [...state, ...hits]);
+        setLoadMore(totalHits > 12 * page);
+        setLoader(false);
       } catch (error) {
-        console.log('error', error);
+        console.log('error in useEffect', error);
       }
-    }
-  }
+    };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+    getData();
+  }, [query, page]);
+
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-  showBigImage = (bigImage, alt) => {
-    this.setState({ bigImage, alt, showModal: true });
+  const showBigImage = (bigImage, alt) => {
+    setBigImage(bigImage);
+    setAlt(alt);
+    setShowModal(true);
   };
 
-  changeQuery = value => {
-    this.setState({ query: value, page: 1, images: [] });
+  const changeQuery = value => {
+    setQuery(value);
+    setPage(1);
+    setImages([]);
   };
 
-  loadMore = () => {
-    this.setState(state => ({ page: state.page + 1 }));
+  const loadMoreClick = () => {
+    setPage(prev => prev + 1);
   };
-
-  render() {
-    const { images, loadMore, loader, showModal, bigImage, alt } = this.state;
-
-    return (
-      <>
-        <Searchbar onSubmit={this.changeQuery} />
-        <ImageGallery images={images} onClick={this.showBigImage} />
-        {loadMore && <Button onClick={this.loadMore} />}
-        <Loader visible={loader} />
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <img src={bigImage} alt={alt} />
-          </Modal>
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={changeQuery} />
+      <ImageGallery images={images} onClick={showBigImage} />
+      {loadMore && <Button onClick={loadMoreClick} />}
+      <Loader visible={loader} />
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <img src={bigImage} alt={alt} />
+        </Modal>
+      )}
+    </>
+  );
+};

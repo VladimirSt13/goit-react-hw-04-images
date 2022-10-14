@@ -3,6 +3,7 @@ import { ImageGalleryStyled } from './ImageGallery.styled';
 import { ImageGalleryItem } from '../ImageGalleryItem/ImageGalleryItem';
 
 export const ImageGallery = ({ images, onClick }) => {
+  console.log('images', images);
   return (
     images.length > 0 && (
       <ImageGalleryStyled>
