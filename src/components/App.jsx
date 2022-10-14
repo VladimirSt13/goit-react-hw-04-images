@@ -57,6 +57,7 @@ export const App = () => {
   const loadMoreClick = () => {
     setPage(prev => prev + 1);
   };
+
   return (
     <>
       <Searchbar onSubmit={changeQuery} />
